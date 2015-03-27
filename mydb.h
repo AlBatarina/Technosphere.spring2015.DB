@@ -1,4 +1,6 @@
 #include <stddef.h>
+#include "stdio.h"
+#include "fcntl.h"
 
 /* check `man dbopen` */
 struct DBT {
@@ -6,7 +8,15 @@ struct DBT {
 	size_t size;
 };
 
+
+
 struct DB {
+	int fd;	
+	struct DBC DB_prm;
+	int blocks_num;
+	long *blocks;
+	size_t zeroBlockOffs;
+
 	/* Public API */
 	/* Returns 0 on OK, -1 on Error */
 	int (*close)(struct DB *db);
