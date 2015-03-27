@@ -118,9 +118,10 @@ int insert_to_block(struct DB *db, int block_num, struct DBT *key, struct DBT *d
 			// How many bytes to move?
 			size_t moveSize = curr_key_size + curr_data_size + plen;
 			size_t sizeOffsTmp = sizeOffs - 2 * sizeof(size_t);
-			while (block_buf[sizeOffsTmp + 1] != 0){
+			while (1){
 				curr_data_size = *(size_t *)(block_buf + sizeOffs);
 				curr_key_size = *(size_t *)(block_buf + sizeOffs + sizeof(size_t));
+				if (curr_key_size == 0) break;
 				moveSize += curr_key_size + curr_data_size + plen;
 				sizeOffsTmp -= 2 * sizeof(size_t);
 			}
