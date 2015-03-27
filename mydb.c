@@ -54,7 +54,11 @@ struct DB *dbopen(char *file, struct DBC *conf){
 		if (write(Database->fd, &Database->DB_prm, sizeof(Database->DB_prm)) == -1) printf("%s\n", strerror(errno));
 		Database->blocks = (char *)malloc(Database->blocks_num);
 		for (int i = 0; i < Database->blocks_num; i++) Database->blocks[i] = 0;
+<<<<<<< HEAD
 		Database->zeroBlockOffs = sizeof(Database->DB_prm) + Database->blocks_num*sizeof(int);
+=======
+		Database->zeroBlockOffs = sizeof(Database->DB_prm) + Database->blocks_num;
+>>>>>>> 710d1cec363fbfa2ec144ee11bd9828b7d753c1a
 	}
 	else{
 		//...
@@ -67,6 +71,7 @@ struct DB *dbopen(char *file, struct DBC *conf){
 	return Database;
 }
 
+<<<<<<< HEAD
 int insert_to_block(struct DB *db, int block_num, struct DBT *key, struct DBT *data, int left_block_num, int right_block_num){
 	// leaf
 	// [key1 || data1 || key2 || data2 || ... || data1_size || key1_size]
@@ -78,31 +83,51 @@ int insert_to_block(struct DB *db, int block_num, struct DBT *key, struct DBT *d
 
 	// Is there space to insert?
 	if (db->DB_prm.page_size - db->blocks[block_num] < key->size + data->size + plen){
+=======
+int insert_to_leaf(struct DB *db, int block_num, struct DBT *key, struct DBT *data){
+	// [key1 || data1 || block_num1 || key2 || data2 || block_num2 || ... || data1_size || key1_size]
+
+	// Is there space to insert?
+	if (db->DB_prm.page_size - db->blocks[block_num] < key->size + data->size){
+>>>>>>> 710d1cec363fbfa2ec144ee11bd9828b7d753c1a
 		printf("The pair key/data is too long!\n");
 		return -1;
 	}
 
+<<<<<<< HEAD
 	// Read the whole block into block_buf
+=======
+>>>>>>> 710d1cec363fbfa2ec144ee11bd9828b7d753c1a
 	char *block_buf = (char *)malloc(db->DB_prm.page_size);
 	lseek(db->fd, db->zeroBlockOffs + block_num*db->DB_prm.page_size);
 	if (read(db->fd, block_buf, db->DB_prm.page_size) == -1) printf("%s\n", strerror(errno));
 
+<<<<<<< HEAD
 	// Search where to insert
 	long dataOffs = plen, sizeOffs = db->DB_prm.page_size - 2*sizeof(size_t);
+=======
+	long dataOffs = 1, sizeOffs = db->DB_prm.page_size - 2*sizeof(size_t);
+>>>>>>> 710d1cec363fbfa2ec144ee11bd9828b7d753c1a
 	while (1){
 		// What's the next key/block sizes?
 		if (block_buf[sizeOffs + 1] != 0){ 
 			// Is current key greater or smaller?
 			int min_len = (block_buf[sizeOffs + 1] > key->size) ? key->size : block_buf[sizeOffs + 1];
 			int res;
+<<<<<<< HEAD
 			if ((res = memcmp(block_buf + dataOffs, key->data, min_len)) < 0){
 				dataOffs += block_buf[sizeOffs] + block_buf[sizeOffs + 1] + plen;
+=======
+			if ((res = memcmp(block_buf + dataOffs + 1, key->data, min_len)) < 0){
+				dataOffs += block_buf[sizeOffs] + block_buf[sizeOffs + 1];
+>>>>>>> 710d1cec363fbfa2ec144ee11bd9828b7d753c1a
 				sizeOffs -= 2 * sizeof(size_t);
 				continue;
 			}
 			if (res = 0 && key->size == block_buf[sizeOffs + 1]) printf("This key already exists!\n");
 			// The key is greater => let's move it!
 			// How many bytes to move?
+<<<<<<< HEAD
 			int moveSize = block_buf[sizeOffs] + block_buf[sizeOffs + 1] + plen;
 			long sizeOffsTmp = sizeOffs - 2 * sizeof(size_t);
 			while (block_buf[sizeOffsTmp + 1] != 0){
@@ -111,12 +136,25 @@ int insert_to_block(struct DB *db, int block_num, struct DBT *key, struct DBT *d
 			}
 			// Moving
 			memmove(block_buf + dataOffs + key->size + data->size + plen, block_buf + dataOffs, moveSize);
+=======
+			dataOffs += block_buf[sizeOffs] + block_buf[sizeOffs + 1];
+			int moveSize = block_buf[sizeOffs] + block_buf[sizeOffs + 1];
+			dataOffs += block_buf[sizeOffs] + block_buf[sizeOffs + 1];
+			long sizeOffsTmp = sizeOffs - 2 * sizeof(size_t);
+			while (block_buf[sizeOffsTmp + 1] != 0){
+				moveSize += block_buf[sizeOffsTmp] + block_buf[sizeOffsTmp + 1];
+				sizeOffsTmp -= 2 * sizeof(size_t);
+			}
+			// Moving
+			memmove(block_buf + dataOffs + key->size + data->size, block_buf + dataOffs, moveSize);
+>>>>>>> 710d1cec363fbfa2ec144ee11bd9828b7d753c1a
 			memmove(block_buf + sizeOffsTmp, block_buf + sizeOffsTmp + 2 * sizeof(size_t), sizeOffs - (sizeOffsTmp + 2 * sizeof(size_t)));
 		}
 		else{ // no more keys left
 
 		}
 		// Inserting key/data
+<<<<<<< HEAD
 		dataOffs -= plen;
 		if (left_block_num != 0){
 			memcpy(block_buf + dataOffs, &left_block_num, sizeof(int));
@@ -127,11 +165,19 @@ int insert_to_block(struct DB *db, int block_num, struct DBT *key, struct DBT *d
 		memcpy(block_buf + sizeOffs + 1, &key->size, sizeof(size_t));
 		memcpy(block_buf + sizeOffs, &data->size, sizeof(size_t));
 		db->blocks[block_num] += key->size + data->size + 2*sizeof(size_t) + plen;
+=======
+		memcpy(block_buf[dataOffs], key->data, key->size);
+		memcpy(block_buf[dataOffs + key->size], data->data, data->size);
+		memcpy(block_buf[sizeOffs + 1], key->size, sizeof(size_t));
+		memcpy(block_buf[sizeOffs], data->size, sizeof(size_t));
+		db->blocks[block_num] += key->size + data->size + 2*sizeof(size_t);
+>>>>>>> 710d1cec363fbfa2ec144ee11bd9828b7d753c1a
 		break;
 	}
 	lseek(db->fd, db->zeroBlockOffs + block_num*db->DB_prm.page_size);
 	if (write(db->fd, block_buf, db->DB_prm.page_size) == -1) printf("%s\n", strerror(errno));
 }
+<<<<<<< HEAD
 
 int find_subtree(struct DB *db, int block_num, struct DBT *key){
 
@@ -208,6 +254,8 @@ int insert(struct DB *db, struct DBT *key, struct DBT *data){
 	return 0;
 }
 
+=======
+>>>>>>> 710d1cec363fbfa2ec144ee11bd9828b7d753c1a
 /*
 int insert_to_block(struct DB *db, int block_num, struct DBT *key, struct DBT *data){
 	// [key1 || data1 || block_num1 || key2 || data2 || block_num2 || ... || data1_size || key1_size]
@@ -272,4 +320,41 @@ int insert_to_block(struct DB *db, int block_num, struct DBT *key, struct DBT *d
 		}
 	}
 }
+<<<<<<< HEAD
 */
+=======
+*/
+
+int split_block(struct DB *db, int new_block_num, int block_num){
+	return -1;
+}
+
+int is_full(struct DB *db, int block_num){
+	return (db->DB_prm.page_size - abs(db->blocks[block_num]) < 50) ? 1 : 0;
+}
+
+int is_leaf(struct DB *db, int block_num){
+	return (db->blocks[block_num] > 0) ? 1 : 0;
+}
+
+int insert_to_subtree(struct DB *db, int block_num, struct DBT *key, struct DBT *data){
+	if (is_leaf(db, block_num)){
+		return insert_to_leaf(db, block_num, key, data);
+	}
+	else{
+		int new_block_num = find_subtree(db, block_num, key);
+		if (insert_to_subtree(db, new_block_num, key, data) == -1) return -1;
+		if (is_full(db, new_block_num)){
+			return split_block(db, new_block_num, block_num);
+		}
+	}
+}
+
+int insert(struct DB *db, struct DBT *key, struct DBT *data){
+	if (insert_to_subtree(db, 0, key, data) == -1) return -1;
+	if (is_full(db, 0)){
+		return split_block(db, 0, 0);
+	}
+	return 0;
+}
+>>>>>>> 710d1cec363fbfa2ec144ee11bd9828b7d753c1a
