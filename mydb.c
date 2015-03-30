@@ -39,37 +39,44 @@ int db_insert(struct DB *db, void *key, size_t key_len,
 	return db->insert(db, &keyt, &valt);
 }
 
-struct DB *dbopen(char *file, struct DBC *conf){
-	struct DB *Database = (struct DB *)malloc(sizeof(struct DB));
+struct DB *dbopen(const char *filename, struct DBC *conf){
+	struct DB *db = (struct DB *)malloc(sizeof(struct DB));
 	printf("Opening file\n");
-	if ((Database->fd = open("Database", O_RDWR)) == -1){
-		printf("Creating new file\n");
-		if ((Database->fd = open("Database", O_RDWR || O_TRUNC)) == -1)	printf("%s\n",strerror(errno));
-		//write(Database.fd, conf->db_size, sizeof(conf->db_size));
-		//write(Database.fd, conf->page_size, sizeof(conf->page_size));
-		//write(Database.fd, conf->cache_size, sizeof(conf->cache_size));
-		Database->DB_prm = *conf;
-		if (fallocate(Database->fd, 0, 0, conf->db_size, 0) == -1) printf("%s\n", strerror(errno));
-		Database->blocks_num = (conf->db_size - sizeof(conf)) / conf->page_size - 1;
-		if (write(Database->fd, &Database->DB_prm, sizeof(Database->DB_prm)) == -1) printf("%s\n", strerror(errno));
-		Database->blocks = (char *)malloc(Database->blocks_num);
-		for (int i = 0; i < Database->blocks_num; i++) Database->blocks[i] = 0;
-		Database->zeroBlockOffs = sizeof(Database->DB_prm) + Database->blocks_num*sizeof(int);
+	if ((db->fd = open(fielanem, O_RDWR)) == -1){
+		printf("Creating a new file\n");
+		if ((db->fd = open("db", O_RDWR || O_TRUNC)) == -1)
+			printf("%s\n",strerror(errno));
+		//write(db.fd, conf->db_size, sizeof(conf->db_size));
+		//write(db.fd, conf->page_size, sizeof(conf->page_size));
+		//write(db.fd, conf->cache_size, sizeof(conf->cache_size));
+		db->DB_prm = *conf;
+		if (fallocate(db->fd, 0, 0, conf->db_size, 0) == -1)
+			printf("%s\n", strerror(errno));
+		db->blocks_num = (conf->db_size - sizeof(conf)) / conf->page_size - 1;
+		if (write(db->fd, &db->DB_prm, sizeof(db->DB_prm)) == -1)
+			printf("%s\n", strerror(errno));
+		db->blocks = (char *)malloc(db->blocks_num);
+		for (int i = 0; i < db->blocks_num; i++) db->blocks[i] = 0;
+		db->zeroBlockOffs = sizeof(db->DB_prm) + db->blocks_num*sizeof(int);
 	}
 	else{
 		//...
-		if (read(Database->fd, &Database->DB_prm, sizeof(Database->DB_prm)) == -1) printf("%s\n", strerror(errno));
-		Database->blocks_num = (Database->DB_prm.db_size - sizeof(Database->DB_prm)) / conf->page_size;
-		Database->blocks = (char *)malloc(Database->blocks_num);
-		if (read(Database->fd, &Database->blocks, Database->blocks_num) == -1) printf("%s\n", strerror(errno));
-		Database->zeroBlockOffs = sizeof(Database->DB_prm) + Database->blocks_num;
+		if (read(db->fd, &db->DB_prm, sizeof(db->DB_prm)) == -1)
+			printf("%s\n", strerror(errno));
+		db->blocks_num = (db->DB_prm.db_size - sizeof(db->DB_prm)) / conf->page_size;
+		db->blocks = (char *)malloc(db->blocks_num);
+		if (read(db->fd, &db->blocks, db->blocks_num) == -1) printf("%s\n", strerror(errno));
+		db->zeroBlockOffs = sizeof(db->DB_prm) + db->blocks_num;
 	}
-	return Database;
+	return db;
 }
 
 int close(struct DB *db){
-	if ((db->fd = open("Database", O_RDWR || O_TRUNC)) == -1)	printf("%s\n", strerror(errno));
-	return 0;
+#if 0
+	if ((db->fd = open("db", O_RDWR || O_TRUNC)) == -1)	printf("%s\n", strerror(errno));
+#endif
+		return 0;
+
 }
 
 int insert_to_block(struct DB *db, int block_num, struct DBT *key, struct DBT *data, int left_block_num, int right_block_num){

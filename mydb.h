@@ -8,10 +8,8 @@ struct DBT {
 	size_t size;
 };
 
-
-
 struct DB {
-	int fd;	
+	int fd;
 	struct DBC DB_prm;
 	int blocks_num;
 	long *blocks;
